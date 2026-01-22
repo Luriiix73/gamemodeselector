@@ -7,14 +7,14 @@ public final class Selector {
     private final ItemDisplay itemDisplay;
     private final TextDisplay textDisplay;
     private final float baseScale;
-    private final String serverName;
+    private final String clickCommand;
     private float rotation;
 
-    public Selector(ItemDisplay itemDisplay, TextDisplay textDisplay, float baseScale, String serverName) {
+    public Selector(ItemDisplay itemDisplay, TextDisplay textDisplay, float baseScale, String clickCommand) {
         this.itemDisplay = itemDisplay;
         this.textDisplay = textDisplay;
         this.baseScale = baseScale;
-        this.serverName = serverName;
+        this.clickCommand = clickCommand;
     }
 
     public ItemDisplay itemDisplay() {
@@ -29,8 +29,8 @@ public final class Selector {
         return baseScale;
     }
 
-    public String serverName() {
-        return serverName;
+    public String clickCommand() {
+        return clickCommand;
     }
 
     public float rotation() {

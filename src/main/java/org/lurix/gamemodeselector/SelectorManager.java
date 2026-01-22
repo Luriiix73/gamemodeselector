@@ -1,8 +1,5 @@
 package org.lurix.gamemodeselector;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -23,7 +20,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractAtEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Transformation;
 import org.jetbrains.annotations.NotNull;
@@ -36,21 +32,19 @@ public final class SelectorManager implements Listener {
     private static final double MAX_INTERACT_DISTANCE = 5.0;
     private static final float ROTATION_STEP = 0.015f;
 
-    private final Plugin plugin;
     private final Map<UUID, Selector> selectors = new HashMap<>();
     private final Map<UUID, UUID> hoveredByPlayer = new HashMap<>();
     private final MiniMessage miniMessage = MiniMessage.miniMessage();
 
-    public SelectorManager(Plugin plugin) {
-        this.plugin = plugin;
+    public SelectorManager() {
     }
 
     public void spawnSelector(
             @NotNull Player player,
             @NotNull String materialName,
             @NotNull String sizeInput,
-            @NotNull String serverName,
-            @NotNull String minimessage
+            @NotNull String minimessage,
+            @NotNull String clickCommand
     ) {
         Material material = Material.matchMaterial(materialName);
         if (material == null || material.isAir()) {
@@ -87,7 +81,7 @@ public final class SelectorManager implements Listener {
             display.setSeeThrough(true);
         });
 
-        Selector selector = new Selector(itemDisplay, textDisplay, size, serverName);
+        Selector selector = new Selector(itemDisplay, textDisplay, size, clickCommand);
         selectors.put(itemDisplay.getUniqueId(), selector);
         selectors.put(textDisplay.getUniqueId(), selector);
 
@@ -219,18 +213,16 @@ public final class SelectorManager implements Listener {
 
     private void handleSelection(Player player, Selector selector) {
         player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BELL, 0.8f, 1.0f);
-        sendToServer(player, selector.serverName());
+        executeClickCommand(player, selector.clickCommand());
     }
 
-    private void sendToServer(Player player, String serverName) {
-        try (ByteArrayOutputStream stream = new ByteArrayOutputStream();
-             DataOutputStream out = new DataOutputStream(stream)) {
-            out.writeUTF("Connect");
-            out.writeUTF(serverName);
-            player.sendPluginMessage(plugin, "BungeeCord", stream.toByteArray());
-        } catch (IOException ex) {
-            player.sendMessage(Component.text("Server-Verbindung fehlgeschlagen."));
+    private void executeClickCommand(Player player, String clickCommand) {
+        String command = clickCommand.startsWith("/") ? clickCommand.substring(1) : clickCommand;
+        if (command.isBlank()) {
+            player.sendMessage(Component.text("Kein Klick-Kommando gesetzt."));
+            return;
         }
+        player.performCommand(command);
     }
 
     private Transformation createTransformation(float scale, float rotation) {

@@ -5,10 +5,10 @@ api-version: "1.21"
 commands:
   selector:
     description: Spawn gamemode selector displays.
-    usage: /selector set <material> <size> <server> <minimessage> | /selector remove
+    usage: /selector set <material> <size> <minimessage> <command> | /selector remove
   gamemode:
     description: Alias for selector command.
-    usage: /gamemode set <material> <size> <server> <minimessage> | /gamemode remove
+    usage: /gamemode set <material> <size> <minimessage> <command> | /gamemode remove
     permission: gamemodeselector.set
 permissions:
   gamemodeselector.set:

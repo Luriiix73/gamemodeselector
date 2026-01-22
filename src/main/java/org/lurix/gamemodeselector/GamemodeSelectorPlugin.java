@@ -15,8 +15,7 @@ public final class GamemodeSelectorPlugin extends JavaPlugin implements CommandE
 
     @Override
     public void onEnable() {
-        selectorManager = new SelectorManager(this);
-        getServer().getMessenger().registerOutgoingPluginChannel(this, "BungeeCord");
+        selectorManager = new SelectorManager();
         getServer().getPluginManager().registerEvents(selectorManager, this);
         getServer().getPluginManager().registerEvents(new HoverListener(selectorManager), this);
         getServer().getScheduler().runTaskTimer(this, selectorManager::tickRotation, 1L, 1L);
@@ -46,23 +45,28 @@ public final class GamemodeSelectorPlugin extends JavaPlugin implements CommandE
             sender.sendMessage(Component.text("Selector-Manager ist nicht verfügbar."));
             return true;
         }
+        if (args.length == 0) {
+            sender.sendMessage(Component.text("Usage: /selector set <material> <size> <minimessage> <command>"));
+            sender.sendMessage(Component.text("Usage: /selector remove"));
+            return true;
+        }
         if ("remove".equalsIgnoreCase(args[0]) || "remvove".equalsIgnoreCase(args[0])) {
             selectorManager.removeNearestSelector(player);
             return true;
         }
         if ("set".equalsIgnoreCase(args[0])) {
             if (args.length < 5) {
-                sender.sendMessage(Component.text("Usage: /selector set <material> <size> <server> <minimessage>"));
+                sender.sendMessage(Component.text("Usage: /selector set <material> <size> <minimessage> <command>"));
                 return true;
             }
             String materialName = args[1];
             String sizeInput = args[2];
-            String server = args[3];
-            String minimessage = String.join(" ", List.of(args).subList(4, args.length));
-            selectorManager.spawnSelector(player, materialName, sizeInput, server, minimessage);
+            String minimessage = args[3];
+            String clickCommand = String.join(" ", List.of(args).subList(4, args.length));
+            selectorManager.spawnSelector(player, materialName, sizeInput, minimessage, clickCommand);
             return true;
         }
-        sender.sendMessage(Component.text("Usage: /selector set <material> <size> <server> <minimessage>"));
+        sender.sendMessage(Component.text("Usage: /selector set <material> <size> <minimessage> <command>"));
         sender.sendMessage(Component.text("Usage: /selector remove"));
         return true;
     }
