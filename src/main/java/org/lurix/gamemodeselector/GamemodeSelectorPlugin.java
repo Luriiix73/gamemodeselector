@@ -15,7 +15,8 @@ public final class GamemodeSelectorPlugin extends JavaPlugin implements CommandE
 
     @Override
     public void onEnable() {
-        selectorManager = new SelectorManager();
+        selectorManager = new SelectorManager(this);
+        getServer().getMessenger().registerOutgoingPluginChannel(this, "BungeeCord");
         getServer().getPluginManager().registerEvents(selectorManager, this);
         getServer().getPluginManager().registerEvents(new HoverListener(selectorManager), this);
         getServer().getScheduler().runTaskTimer(this, selectorManager::tickRotation, 1L, 1L);
@@ -46,7 +47,8 @@ public final class GamemodeSelectorPlugin extends JavaPlugin implements CommandE
             return true;
         }
         if (args.length == 0) {
-            sender.sendMessage(Component.text("Usage: /selector set <material> <size> <minimessage> <command>"));
+            sender.sendMessage(Component.text("Usage: /selector set <material> <size> <minimessage>"));
+            sender.sendMessage(Component.text("Usage: /selector add (<server>)"));
             sender.sendMessage(Component.text("Usage: /selector remove"));
             return true;
         }
@@ -54,19 +56,31 @@ public final class GamemodeSelectorPlugin extends JavaPlugin implements CommandE
             selectorManager.removeNearestSelector(player);
             return true;
         }
+        if ("add".equalsIgnoreCase(args[0])) {
+            if (args.length < 2) {
+                sender.sendMessage(Component.text("Usage: /selector add (<server>)"));
+                return true;
+            }
+            String serverName = args[1];
+            if (serverName.startsWith("(") && serverName.endsWith(")") && serverName.length() > 2) {
+                serverName = serverName.substring(1, serverName.length() - 1);
+            }
+            selectorManager.setNearestSelectorServer(player, serverName);
+            return true;
+        }
         if ("set".equalsIgnoreCase(args[0])) {
-            if (args.length < 5) {
-                sender.sendMessage(Component.text("Usage: /selector set <material> <size> <minimessage> <command>"));
+            if (args.length < 4) {
+                sender.sendMessage(Component.text("Usage: /selector set <material> <size> <minimessage>"));
                 return true;
             }
             String materialName = args[1];
             String sizeInput = args[2];
-            String minimessage = args[3];
-            String clickCommand = String.join(" ", List.of(args).subList(4, args.length));
-            selectorManager.spawnSelector(player, materialName, sizeInput, minimessage, clickCommand);
+            String minimessage = String.join(" ", List.of(args).subList(3, args.length));
+            selectorManager.spawnSelector(player, materialName, sizeInput, minimessage);
             return true;
         }
-        sender.sendMessage(Component.text("Usage: /selector set <material> <size> <minimessage> <command>"));
+        sender.sendMessage(Component.text("Usage: /selector set <material> <size> <minimessage>"));
+        sender.sendMessage(Component.text("Usage: /selector add (<server>)"));
         sender.sendMessage(Component.text("Usage: /selector remove"));
         return true;
     }

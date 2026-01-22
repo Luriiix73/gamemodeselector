@@ -1,20 +1,29 @@
 package org.lurix.gamemodeselector;
 
+import org.bukkit.entity.Interaction;
 import org.bukkit.entity.ItemDisplay;
 import org.bukkit.entity.TextDisplay;
 
 public final class Selector {
     private final ItemDisplay itemDisplay;
     private final TextDisplay textDisplay;
+    private final Interaction interaction;
     private final float baseScale;
-    private final String clickCommand;
+    private String serverName;
     private float rotation;
 
-    public Selector(ItemDisplay itemDisplay, TextDisplay textDisplay, float baseScale, String clickCommand) {
+    public Selector(
+            ItemDisplay itemDisplay,
+            TextDisplay textDisplay,
+            Interaction interaction,
+            float baseScale,
+            String serverName
+    ) {
         this.itemDisplay = itemDisplay;
         this.textDisplay = textDisplay;
+        this.interaction = interaction;
         this.baseScale = baseScale;
-        this.clickCommand = clickCommand;
+        this.serverName = serverName;
     }
 
     public ItemDisplay itemDisplay() {
@@ -25,12 +34,20 @@ public final class Selector {
         return textDisplay;
     }
 
+    public Interaction interaction() {
+        return interaction;
+    }
+
     public float baseScale() {
         return baseScale;
     }
 
-    public String clickCommand() {
-        return clickCommand;
+    public String serverName() {
+        return serverName;
+    }
+
+    public void setServerName(String serverName) {
+        this.serverName = serverName;
     }
 
     public float rotation() {
