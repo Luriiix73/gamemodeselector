@@ -42,15 +42,29 @@ public final class GamemodeSelectorPlugin extends JavaPlugin implements CommandE
             sender.sendMessage(Component.text("Nur Spieler können dieses Kommando nutzen."));
             return true;
         }
-        if (args.length < 5 || !"set".equalsIgnoreCase(args[0])) {
+        if (args.length < 2) {
             sender.sendMessage(Component.text("Usage: /gamemode set <material> <size> <server> <minimessage>"));
+            sender.sendMessage(Component.text("Usage: /gamemode remove"));
             return true;
         }
-        String materialName = args[1];
-        String sizeInput = args[2];
-        String server = args[3];
-        String minimessage = String.join(" ", List.of(args).subList(4, args.length));
-        selectorManager.spawnSelector(player, materialName, sizeInput, server, minimessage);
+        if ("set".equalsIgnoreCase(args[0])) {
+            if (args.length < 5) {
+                sender.sendMessage(Component.text("Usage: /gamemode set <material> <size> <server> <minimessage>"));
+                return true;
+            }
+            String materialName = args[1];
+            String sizeInput = args[2];
+            String server = args[3];
+            String minimessage = String.join(" ", List.of(args).subList(4, args.length));
+            selectorManager.spawnSelector(player, materialName, sizeInput, server, minimessage);
+            return true;
+        }
+        if ("remove".equalsIgnoreCase(args[0])) {
+            selectorManager.removeNearestSelector(player);
+            return true;
+        }
+        sender.sendMessage(Component.text("Usage: /gamemode set <material> <size> <server> <minimessage>"));
+        sender.sendMessage(Component.text("Usage: /gamemode remove"));
         return true;
     }
 

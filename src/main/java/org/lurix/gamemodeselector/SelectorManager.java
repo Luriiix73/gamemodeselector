@@ -34,7 +34,7 @@ import org.joml.Vector3f;
 public final class SelectorManager implements Listener {
     private static final float HOVER_SCALE_MULTIPLIER = 1.3f;
     private static final double MAX_INTERACT_DISTANCE = 10.0;
-    private static final float ROTATION_STEP = 0.03f;
+    private static final float ROTATION_STEP = 0.015f;
 
     private final Plugin plugin;
     private final Map<UUID, Selector> selectors = new HashMap<>();
@@ -77,8 +77,8 @@ public final class SelectorManager implements Listener {
             display.setTransformation(createTransformation(size, 0f));
         });
 
-        float textScale = Math.max(0.5f, size * 0.5f);
-        double textYOffset = size * 0.6 + 0.8;
+        float textScale = Math.max(0.5f, size * 0.6f);
+        double textYOffset = size * 0.7 + 0.8;
         Location textLocation = baseLocation.clone().add(0, textYOffset, 0);
         TextDisplay textDisplay = player.getWorld().spawn(textLocation, TextDisplay.class, display -> {
             display.text(miniMessage.deserialize(minimessage));
@@ -151,7 +151,7 @@ public final class SelectorManager implements Listener {
             return materials;
         }
         if (args.length == 1) {
-            return List.of("set");
+            return List.of("set", "remove");
         }
         return List.of();
     }
@@ -177,6 +177,19 @@ public final class SelectorManager implements Listener {
         } else {
             hoveredByPlayer.put(playerId, current);
         }
+    }
+
+    public void removeNearestSelector(@NotNull Player player) {
+        Selector selector = rayTraceSelector(player);
+        if (selector == null) {
+            selector = findNearestSelector(player);
+        }
+        if (selector == null) {
+            player.sendMessage(Component.text("Kein Gamemode-Selector in der Nähe gefunden."));
+            return;
+        }
+        removeSelector(selector);
+        player.sendMessage(Component.text("Gamemode-Selector entfernt."));
     }
 
     @Nullable
@@ -236,5 +249,32 @@ public final class SelectorManager implements Listener {
                 new Vector3f(scale, scale, scale),
                 new Quaternionf()
         );
+    }
+
+    @Nullable
+    private Selector findNearestSelector(Player player) {
+        Location origin = player.getEyeLocation();
+        double maxDistanceSquared = MAX_INTERACT_DISTANCE * MAX_INTERACT_DISTANCE;
+        Selector nearest = null;
+        double nearestDistance = maxDistanceSquared;
+        for (Selector selector : selectors.values()) {
+            ItemDisplay display = selector.itemDisplay();
+            if (!display.isValid()) {
+                continue;
+            }
+            double distanceSquared = display.getLocation().distanceSquared(origin);
+            if (distanceSquared <= nearestDistance) {
+                nearestDistance = distanceSquared;
+                nearest = selector;
+            }
+        }
+        return nearest;
+    }
+
+    private void removeSelector(Selector selector) {
+        selectors.remove(selector.itemDisplay().getUniqueId());
+        selectors.remove(selector.textDisplay().getUniqueId());
+        selector.itemDisplay().remove();
+        selector.textDisplay().remove();
     }
 }
