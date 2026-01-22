@@ -5,14 +5,18 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
+import org.bukkit.World;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Interaction;
@@ -52,25 +56,49 @@ public final class SelectorManager implements Listener {
             @NotNull String sizeInput,
             @NotNull String minimessage
     ) {
+        boolean created = spawnSelectorAt(player.getLocation().clone(), materialName, sizeInput, minimessage, null, player);
+        if (created) {
+            player.sendMessage(Component.text("Gamemode-Selector erstellt."));
+        }
+    }
+
+    public boolean spawnSelectorAt(
+            @NotNull Location location,
+            @NotNull String materialName,
+            @NotNull String sizeInput,
+            @NotNull String minimessage,
+            @Nullable String serverName,
+            @Nullable Player notifier
+    ) {
         Material material = Material.matchMaterial(materialName);
         if (material == null || material.isAir()) {
-            player.sendMessage(Component.text("Unbekanntes Material: " + materialName));
-            return;
+            if (notifier != null) {
+                notifier.sendMessage(Component.text("Unbekanntes Material: " + materialName));
+            }
+            return false;
         }
         float size;
         try {
             size = Float.parseFloat(sizeInput);
         } catch (NumberFormatException ex) {
-            player.sendMessage(Component.text("Größe muss eine Zahl sein."));
-            return;
+            if (notifier != null) {
+                notifier.sendMessage(Component.text("Größe muss eine Zahl sein."));
+            }
+            return false;
         }
         if (size <= 0.1f) {
-            player.sendMessage(Component.text("Größe muss größer als 0.1 sein."));
-            return;
+            if (notifier != null) {
+                notifier.sendMessage(Component.text("Größe muss größer als 0.1 sein."));
+            }
+            return false;
         }
 
-        Location baseLocation = player.getLocation().clone();
-        ItemDisplay itemDisplay = player.getWorld().spawn(baseLocation, ItemDisplay.class, display -> {
+        Location baseLocation = location.clone();
+        World world = baseLocation.getWorld();
+        if (world == null) {
+            return false;
+        }
+        ItemDisplay itemDisplay = world.spawn(baseLocation, ItemDisplay.class, display -> {
             display.setItemStack(new ItemStack(material));
             display.setBillboard(Display.Billboard.FIXED);
             display.setGlowing(true);
@@ -79,7 +107,7 @@ public final class SelectorManager implements Listener {
 
         float interactionSize = Math.max(0.5f, size);
         Location interactionLocation = baseLocation.clone().subtract(0, interactionSize * 0.5, 0);
-        Interaction interaction = player.getWorld().spawn(interactionLocation, Interaction.class, hitbox -> {
+        Interaction interaction = world.spawn(interactionLocation, Interaction.class, hitbox -> {
             hitbox.setInteractionWidth(interactionSize);
             hitbox.setInteractionHeight(interactionSize);
         });
@@ -87,19 +115,19 @@ public final class SelectorManager implements Listener {
         float textScale = Math.max(1.5f, size * 1.8f);
         double textYOffset = size * 0.7 + 0.8;
         Location textLocation = baseLocation.clone().add(0, textYOffset, 0);
-        TextDisplay textDisplay = player.getWorld().spawn(textLocation, TextDisplay.class, display -> {
+        TextDisplay textDisplay = world.spawn(textLocation, TextDisplay.class, display -> {
             display.text(miniMessage.deserialize(minimessage));
             display.setBillboard(Display.Billboard.CENTER);
             display.setTransformation(createTextTransformation(textScale));
             display.setSeeThrough(true);
         });
 
-        Selector selector = new Selector(itemDisplay, textDisplay, interaction, size, null);
+        Selector selector = new Selector(itemDisplay, textDisplay, interaction, size, minimessage, material, serverName);
         selectors.put(itemDisplay.getUniqueId(), selector);
         selectors.put(textDisplay.getUniqueId(), selector);
         selectors.put(interaction.getUniqueId(), selector);
-
-        player.sendMessage(Component.text("Gamemode-Selector erstellt."));
+        saveSelectors();
+        return true;
     }
 
     @EventHandler
@@ -140,6 +168,7 @@ public final class SelectorManager implements Listener {
     }
 
     public void shutdown() {
+        saveSelectors();
         for (Selector selector : selectors.values()) {
             selector.itemDisplay().remove();
             selector.textDisplay().remove();
@@ -199,6 +228,7 @@ public final class SelectorManager implements Listener {
         }
         removeSelector(selector);
         player.sendMessage(Component.text("Gamemode-Selector entfernt."));
+        saveSelectors();
     }
 
     public void setNearestSelectorServer(@NotNull Player player, @NotNull String serverName) {
@@ -216,6 +246,7 @@ public final class SelectorManager implements Listener {
         }
         selector.setServerName(serverName);
         player.sendMessage(Component.text("Gamemode-Selector Ziel gesetzt: " + serverName));
+        saveSelectors();
     }
 
     @Nullable
@@ -308,5 +339,56 @@ public final class SelectorManager implements Listener {
         selector.itemDisplay().remove();
         selector.textDisplay().remove();
         selector.interaction().remove();
+    }
+
+    public void loadSelectors() {
+        ConfigurationSection section = plugin.getConfig().getConfigurationSection("selectors");
+        if (section == null) {
+            return;
+        }
+        for (String key : section.getKeys(false)) {
+            ConfigurationSection entry = section.getConfigurationSection(key);
+            if (entry == null) {
+                continue;
+            }
+            String worldName = entry.getString("world");
+            World world = worldName == null ? null : plugin.getServer().getWorld(worldName);
+            if (world == null) {
+                continue;
+            }
+            double x = entry.getDouble("x");
+            double y = entry.getDouble("y");
+            double z = entry.getDouble("z");
+            String materialName = entry.getString("material", "");
+            String minimessage = entry.getString("minimessage", "");
+            String serverName = entry.getString("server", "");
+            float size = (float) entry.getDouble("size", 1.0);
+            Location location = new Location(world, x, y, z);
+            spawnSelectorAt(location, materialName, Float.toString(size), minimessage, serverName, null);
+        }
+    }
+
+    public void saveSelectors() {
+        plugin.getConfig().set("selectors", null);
+        ConfigurationSection section = plugin.getConfig().createSection("selectors");
+        Set<Selector> uniqueSelectors = new HashSet<>(selectors.values());
+        int index = 0;
+        for (Selector selector : uniqueSelectors) {
+            Location location = selector.location();
+            World world = location.getWorld();
+            if (world == null) {
+                continue;
+            }
+            ConfigurationSection entry = section.createSection(Integer.toString(index++));
+            entry.set("world", world.getName());
+            entry.set("x", location.getX());
+            entry.set("y", location.getY());
+            entry.set("z", location.getZ());
+            entry.set("material", selector.material().name());
+            entry.set("size", selector.baseScale());
+            entry.set("minimessage", selector.minimessage());
+            entry.set("server", selector.serverName());
+        }
+        plugin.saveConfig();
     }
 }

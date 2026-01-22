@@ -1,5 +1,7 @@
 package org.lurix.gamemodeselector;
 
+import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.entity.Interaction;
 import org.bukkit.entity.ItemDisplay;
 import org.bukkit.entity.TextDisplay;
@@ -9,6 +11,8 @@ public final class Selector {
     private final TextDisplay textDisplay;
     private final Interaction interaction;
     private final float baseScale;
+    private final String minimessage;
+    private final Material material;
     private String serverName;
     private float rotation;
 
@@ -17,12 +21,16 @@ public final class Selector {
             TextDisplay textDisplay,
             Interaction interaction,
             float baseScale,
+            String minimessage,
+            Material material,
             String serverName
     ) {
         this.itemDisplay = itemDisplay;
         this.textDisplay = textDisplay;
         this.interaction = interaction;
         this.baseScale = baseScale;
+        this.minimessage = minimessage;
+        this.material = material;
         this.serverName = serverName;
     }
 
@@ -42,6 +50,14 @@ public final class Selector {
         return baseScale;
     }
 
+    public String minimessage() {
+        return minimessage;
+    }
+
+    public Material material() {
+        return material;
+    }
+
     public String serverName() {
         return serverName;
     }
@@ -56,5 +72,9 @@ public final class Selector {
 
     public void setRotation(float rotation) {
         this.rotation = rotation;
+    }
+
+    public Location location() {
+        return itemDisplay.getLocation().clone();
     }
 }

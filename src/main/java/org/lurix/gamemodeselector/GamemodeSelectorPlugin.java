@@ -22,6 +22,7 @@ public final class GamemodeSelectorPlugin extends JavaPlugin implements CommandE
         getServer().getScheduler().runTaskTimer(this, selectorManager::tickRotation, 1L, 1L);
         registerCommand("selector");
         registerCommand("gamemode");
+        selectorManager.loadSelectors();
     }
 
     @Override
