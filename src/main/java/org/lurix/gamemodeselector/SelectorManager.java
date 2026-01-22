@@ -34,7 +34,7 @@ import org.joml.Vector3f;
 
 public final class SelectorManager implements Listener {
     private static final float HOVER_SCALE_MULTIPLIER = 1.5f;
-    private static final double MAX_INTERACT_DISTANCE = 5.0;
+    private static final double MAX_INTERACT_DISTANCE = 10.0;
     private static final float ROTATION_STEP = 0.015f;
 
     private final Plugin plugin;
