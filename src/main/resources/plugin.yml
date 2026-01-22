@@ -1,0 +1,13 @@
+name: gamemodeselector
+version: 1.0-SNAPSHOT
+main: org.lurix.gamemodeselector.GamemodeSelector
+api-version: "1.21"
+commands:
+  gamemode:
+    description: Spawn gamemode selector displays.
+    usage: /gamemode set <material> <size> <server> <minimessage>
+    permission: gamemodeselector.set
+permissions:
+  gamemodeselector.set:
+    description: Allows creating gamemode selectors.
+    default: op
