@@ -69,7 +69,7 @@ public final class SelectorManager implements Listener {
             return;
         }
 
-        Location baseLocation = player.getLocation().clone();
+        Location baseLocation = player.getLocation().toCenterLocation();
         ItemDisplay itemDisplay = player.getWorld().spawn(baseLocation, ItemDisplay.class, display -> {
             display.setItemStack(new ItemStack(material));
             display.setBillboard(Display.Billboard.FIXED);
