@@ -37,6 +37,7 @@ import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
 public final class SelectorManager implements Listener {
+    private static final String SELECTOR_TAG = "gamemodeselector";
     private static final float HOVER_SCALE_MULTIPLIER = 1.5f;
     private static final double MAX_INTERACT_DISTANCE = 10.0;
     private static final float ROTATION_STEP = 0.015f;
@@ -103,6 +104,7 @@ public final class SelectorManager implements Listener {
             display.setBillboard(Display.Billboard.FIXED);
             display.setGlowing(true);
             display.setTransformation(createTransformation(size, 0f));
+            display.addScoreboardTag(SELECTOR_TAG);
         });
 
         float interactionSize = Math.max(0.5f, size);
@@ -110,6 +112,7 @@ public final class SelectorManager implements Listener {
         Interaction interaction = world.spawn(interactionLocation, Interaction.class, hitbox -> {
             hitbox.setInteractionWidth(interactionSize);
             hitbox.setInteractionHeight(interactionSize);
+            hitbox.addScoreboardTag(SELECTOR_TAG);
         });
 
         float textScale = Math.max(1.5f, size * 1.8f);
@@ -120,6 +123,7 @@ public final class SelectorManager implements Listener {
             display.setBillboard(Display.Billboard.CENTER);
             display.setTransformation(createTextTransformation(textScale));
             display.setSeeThrough(true);
+            display.addScoreboardTag(SELECTOR_TAG);
         });
 
         Selector selector = new Selector(itemDisplay, textDisplay, interaction, size, minimessage, material, serverName);
@@ -189,7 +193,7 @@ public final class SelectorManager implements Listener {
             return materials;
         }
         if (args.length == 1) {
-            return List.of("set", "add", "remove");
+            return List.of("set", "add", "remove", "clear");
         }
         return List.of();
     }
@@ -389,6 +393,24 @@ public final class SelectorManager implements Listener {
             entry.set("minimessage", selector.minimessage());
             entry.set("server", selector.serverName());
         }
+        plugin.saveConfig();
+    }
+
+    public void cleanupSpawnedEntities() {
+        for (World world : plugin.getServer().getWorlds()) {
+            for (Entity entity : world.getEntities()) {
+                if (entity.getScoreboardTags().contains(SELECTOR_TAG)) {
+                    entity.remove();
+                }
+            }
+        }
+    }
+
+    public void clearAllSelectors() {
+        cleanupSpawnedEntities();
+        selectors.clear();
+        hoveredByPlayer.clear();
+        plugin.getConfig().set("selectors", null);
         plugin.saveConfig();
     }
 }
