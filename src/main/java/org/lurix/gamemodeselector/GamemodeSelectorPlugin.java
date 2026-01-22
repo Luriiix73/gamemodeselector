@@ -20,8 +20,14 @@ public final class GamemodeSelectorPlugin extends JavaPlugin implements CommandE
         getServer().getPluginManager().registerEvents(selectorManager, this);
         getServer().getPluginManager().registerEvents(new HoverListener(selectorManager), this);
         getServer().getScheduler().runTaskTimer(this, selectorManager::tickRotation, 1L, 1L);
-        getCommand("selector").setExecutor(this);
-        getCommand("selector").setTabCompleter(this);
+        var command = getCommand("selector");
+        if (command == null) {
+            getLogger().severe("Command 'selector' not found. Check plugin.yml.");
+            getServer().getPluginManager().disablePlugin(this);
+            return;
+        }
+        command.setExecutor(this);
+        command.setTabCompleter(this);
     }
 
     @Override
@@ -40,6 +46,10 @@ public final class GamemodeSelectorPlugin extends JavaPlugin implements CommandE
     ) {
         if (!(sender instanceof Player player)) {
             sender.sendMessage(Component.text("Nur Spieler können dieses Kommando nutzen."));
+            return true;
+        }
+        if (selectorManager == null) {
+            sender.sendMessage(Component.text("Selector-Manager ist nicht verfügbar."));
             return true;
         }
         if (args.length < 2) {
