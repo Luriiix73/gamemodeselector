@@ -78,7 +78,8 @@ public final class SelectorManager implements Listener {
         });
 
         float interactionSize = Math.max(0.5f, size);
-        Interaction interaction = player.getWorld().spawn(baseLocation, Interaction.class, hitbox -> {
+        Location interactionLocation = baseLocation.clone().subtract(0, interactionSize * 0.5, 0);
+        Interaction interaction = player.getWorld().spawn(interactionLocation, Interaction.class, hitbox -> {
             hitbox.setInteractionWidth(interactionSize);
             hitbox.setInteractionHeight(interactionSize);
         });
