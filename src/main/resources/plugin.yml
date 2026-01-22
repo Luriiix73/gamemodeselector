@@ -1,6 +1,6 @@
 name: gamemodeselector
 version: 1.0-SNAPSHOT
-main: org.lurix.gamemodeselector.GamemodeSelector
+main: org.lurix.gamemodeselector.GamemodeSelectorPlugin
 api-version: "1.21"
 commands:
   gamemode:

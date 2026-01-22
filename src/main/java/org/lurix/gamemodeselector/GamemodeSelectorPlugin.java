@@ -10,7 +10,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
-public final class GamemodeSelector extends JavaPlugin implements CommandExecutor, TabCompleter {
+public final class GamemodeSelectorPlugin extends JavaPlugin implements CommandExecutor, TabCompleter {
     private SelectorManager selectorManager;
 
     @Override
