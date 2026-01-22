@@ -20,8 +20,8 @@ public final class GamemodeSelectorPlugin extends JavaPlugin implements CommandE
         getServer().getPluginManager().registerEvents(selectorManager, this);
         getServer().getPluginManager().registerEvents(new HoverListener(selectorManager), this);
         getServer().getScheduler().runTaskTimer(this, selectorManager::tickRotation, 1L, 1L);
-        getCommand("gamemode").setExecutor(this);
-        getCommand("gamemode").setTabCompleter(this);
+        getCommand("selector").setExecutor(this);
+        getCommand("selector").setTabCompleter(this);
     }
 
     @Override
@@ -43,13 +43,13 @@ public final class GamemodeSelectorPlugin extends JavaPlugin implements CommandE
             return true;
         }
         if (args.length < 2) {
-            sender.sendMessage(Component.text("Usage: /gamemode set <material> <size> <server> <minimessage>"));
-            sender.sendMessage(Component.text("Usage: /gamemode remove"));
+            sender.sendMessage(Component.text("Usage: /selector set <material> <size> <server> <minimessage>"));
+            sender.sendMessage(Component.text("Usage: /selector remvove"));
             return true;
         }
         if ("set".equalsIgnoreCase(args[0])) {
             if (args.length < 5) {
-                sender.sendMessage(Component.text("Usage: /gamemode set <material> <size> <server> <minimessage>"));
+                sender.sendMessage(Component.text("Usage: /selector set <material> <size> <server> <minimessage>"));
                 return true;
             }
             String materialName = args[1];
@@ -59,12 +59,12 @@ public final class GamemodeSelectorPlugin extends JavaPlugin implements CommandE
             selectorManager.spawnSelector(player, materialName, sizeInput, server, minimessage);
             return true;
         }
-        if ("remove".equalsIgnoreCase(args[0])) {
+        if ("remvove".equalsIgnoreCase(args[0])) {
             selectorManager.removeNearestSelector(player);
             return true;
         }
-        sender.sendMessage(Component.text("Usage: /gamemode set <material> <size> <server> <minimessage>"));
-        sender.sendMessage(Component.text("Usage: /gamemode remove"));
+        sender.sendMessage(Component.text("Usage: /selector set <material> <size> <server> <minimessage>"));
+        sender.sendMessage(Component.text("Usage: /selector remvove"));
         return true;
     }
 

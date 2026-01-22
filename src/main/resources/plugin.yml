@@ -3,9 +3,9 @@ version: 1.0-SNAPSHOT
 main: org.lurix.gamemodeselector.GamemodeSelectorPlugin
 api-version: "1.21"
 commands:
-  gamemode:
+  selector:
     description: Spawn gamemode selector displays.
-    usage: /gamemode set <material> <size> <server> <minimessage> | /gamemode remove
+    usage: /selector set <material> <size> <server> <minimessage> | /selector remvove
     permission: gamemodeselector.set
 permissions:
   gamemodeselector.set:

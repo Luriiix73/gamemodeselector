@@ -77,7 +77,7 @@ public final class SelectorManager implements Listener {
             display.setTransformation(createTransformation(size, 0f));
         });
 
-        float textScale = Math.max(0.5f, size * 0.6f);
+        float textScale = Math.max(1.5f, size * 1.8f);
         double textYOffset = size * 0.7 + 0.8;
         Location textLocation = baseLocation.clone().add(0, textYOffset, 0);
         TextDisplay textDisplay = player.getWorld().spawn(textLocation, TextDisplay.class, display -> {
@@ -151,7 +151,7 @@ public final class SelectorManager implements Listener {
             return materials;
         }
         if (args.length == 1) {
-            return List.of("set", "remove");
+            return List.of("set", "remvove");
         }
         return List.of();
     }
