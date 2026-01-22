@@ -46,9 +46,8 @@ public final class GamemodeSelectorPlugin extends JavaPlugin implements CommandE
             sender.sendMessage(Component.text("Selector-Manager ist nicht verfügbar."));
             return true;
         }
-        if (args.length < 2) {
-            sender.sendMessage(Component.text("Usage: /selector set <material> <size> <server> <minimessage>"));
-            sender.sendMessage(Component.text("Usage: /selector remove"));
+        if ("remove".equalsIgnoreCase(args[0]) || "remvove".equalsIgnoreCase(args[0])) {
+            selectorManager.removeNearestSelector(player);
             return true;
         }
         if ("set".equalsIgnoreCase(args[0])) {
@@ -61,10 +60,6 @@ public final class GamemodeSelectorPlugin extends JavaPlugin implements CommandE
             String server = args[3];
             String minimessage = String.join(" ", List.of(args).subList(4, args.length));
             selectorManager.spawnSelector(player, materialName, sizeInput, server, minimessage);
-            return true;
-        }
-        if ("remove".equalsIgnoreCase(args[0]) || "remvove".equalsIgnoreCase(args[0])) {
-            selectorManager.removeNearestSelector(player);
             return true;
         }
         sender.sendMessage(Component.text("Usage: /selector set <material> <size> <server> <minimessage>"));
