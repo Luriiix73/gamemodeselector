@@ -20,14 +20,8 @@ public final class GamemodeSelectorPlugin extends JavaPlugin implements CommandE
         getServer().getPluginManager().registerEvents(selectorManager, this);
         getServer().getPluginManager().registerEvents(new HoverListener(selectorManager), this);
         getServer().getScheduler().runTaskTimer(this, selectorManager::tickRotation, 1L, 1L);
-        var command = getCommand("selector");
-        if (command == null) {
-            getLogger().severe("Command 'selector' not found. Check plugin.yml.");
-            getServer().getPluginManager().disablePlugin(this);
-            return;
-        }
-        command.setExecutor(this);
-        command.setTabCompleter(this);
+        registerCommand("selector");
+        registerCommand("gamemode");
     }
 
     @Override
@@ -54,7 +48,7 @@ public final class GamemodeSelectorPlugin extends JavaPlugin implements CommandE
         }
         if (args.length < 2) {
             sender.sendMessage(Component.text("Usage: /selector set <material> <size> <server> <minimessage>"));
-            sender.sendMessage(Component.text("Usage: /selector remvove"));
+            sender.sendMessage(Component.text("Usage: /selector remove"));
             return true;
         }
         if ("set".equalsIgnoreCase(args[0])) {
@@ -69,13 +63,23 @@ public final class GamemodeSelectorPlugin extends JavaPlugin implements CommandE
             selectorManager.spawnSelector(player, materialName, sizeInput, server, minimessage);
             return true;
         }
-        if ("remvove".equalsIgnoreCase(args[0])) {
+        if ("remove".equalsIgnoreCase(args[0]) || "remvove".equalsIgnoreCase(args[0])) {
             selectorManager.removeNearestSelector(player);
             return true;
         }
         sender.sendMessage(Component.text("Usage: /selector set <material> <size> <server> <minimessage>"));
-        sender.sendMessage(Component.text("Usage: /selector remvove"));
+        sender.sendMessage(Component.text("Usage: /selector remove"));
         return true;
+    }
+
+    private void registerCommand(String name) {
+        var command = getCommand(name);
+        if (command == null) {
+            getLogger().warning("Command '" + name + "' not found. Check plugin.yml.");
+            return;
+        }
+        command.setExecutor(this);
+        command.setTabCompleter(this);
     }
 
     @Override
