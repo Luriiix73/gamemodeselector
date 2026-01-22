@@ -156,7 +156,7 @@ public final class SelectorManager implements Listener {
     }
 
     public void tickRotation() {
-        for (Selector selector : selectors.values()) {
+        for (Selector selector : new HashSet<>(selectors.values())) {
             ItemDisplay display = selector.itemDisplay();
             if (!display.isValid()) {
                 continue;
