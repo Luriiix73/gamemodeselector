@@ -181,7 +181,7 @@ public final class SelectorManager implements Listener {
 
     @Nullable
     public Selector rayTraceSelector(@NotNull Player player) {
-        RayTraceResult result = player.rayTraceEntities(MAX_INTERACT_DISTANCE, entity -> entity instanceof ItemDisplay);
+        RayTraceResult result = player.rayTraceEntities((int) MAX_INTERACT_DISTANCE, entity -> entity instanceof ItemDisplay);
         if (result == null || result.getHitEntity() == null) {
             return null;
         }
