@@ -166,7 +166,15 @@ public final class SelectorManager implements Listener {
             }
             float nextRotation = selector.rotation() + ROTATION_STEP;
             selector.setRotation(nextRotation);
-            display.setTransformation(createTransformation(selector.baseScale(), nextRotation));
+            float targetRotation = nextRotation;
+            Player viewer = findNearestPlayer(display.getLocation());
+            if (viewer != null) {
+                targetRotation = (float) Math.atan2(
+                        viewer.getLocation().getX() - display.getLocation().getX(),
+                        viewer.getLocation().getZ() - display.getLocation().getZ()
+                );
+            }
+            display.setTransformation(createTransformation(selector.baseScale(), targetRotation));
         }
         for (Selector selector : invalidSelectors) {
             removeSelector(selector);
@@ -429,6 +437,24 @@ public final class SelectorManager implements Listener {
             Location location = new Location(world, x, y, z);
             removeLegacyEntities(world, location);
         }
+    }
+
+    @Nullable
+    private Player findNearestPlayer(Location location) {
+        World world = location.getWorld();
+        if (world == null) {
+            return null;
+        }
+        Player nearest = null;
+        double nearestDistance = Double.MAX_VALUE;
+        for (Player player : world.getPlayers()) {
+            double distance = player.getLocation().distanceSquared(location);
+            if (distance < nearestDistance) {
+                nearestDistance = distance;
+                nearest = player;
+            }
+        }
+        return nearest;
     }
 
     public void clearAllSelectors() {
