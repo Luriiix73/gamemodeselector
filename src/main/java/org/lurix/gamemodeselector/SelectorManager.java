@@ -36,7 +36,7 @@ import org.joml.Vector3f;
 
 public final class SelectorManager implements Listener {
     private static final String SELECTOR_TAG = "gamemodeselector";
-    private static final double LEGACY_CLEANUP_RADIUS = 0.6;
+    private static final double LEGACY_CLEANUP_RADIUS = 1.5;
     private static final float HOVER_SCALE_MULTIPLIER = 1.5f;
     private static final double MAX_INTERACT_DISTANCE = 10.0;
     private static final float ROTATION_STEP = 0.015f;
@@ -156,14 +156,20 @@ public final class SelectorManager implements Listener {
     }
 
     public void tickRotation() {
-        for (Selector selector : new HashSet<>(selectors.values())) {
+        Set<Selector> uniqueSelectors = new HashSet<>(selectors.values());
+        List<Selector> invalidSelectors = new ArrayList<>();
+        for (Selector selector : uniqueSelectors) {
             ItemDisplay display = selector.itemDisplay();
             if (!display.isValid()) {
+                invalidSelectors.add(selector);
                 continue;
             }
             float nextRotation = selector.rotation() + ROTATION_STEP;
             selector.setRotation(nextRotation);
             display.setTransformation(createTransformation(selector.baseScale(), nextRotation));
+        }
+        for (Selector selector : invalidSelectors) {
+            removeSelector(selector);
         }
     }
 
@@ -338,6 +344,7 @@ public final class SelectorManager implements Listener {
             loading = false;
             return;
         }
+        removeLegacyEntitiesForConfig(section);
         for (String key : section.getKeys(false)) {
             ConfigurationSection entry = section.getConfigurationSection(key);
             if (entry == null) {
@@ -402,6 +409,25 @@ public final class SelectorManager implements Listener {
             if (entity instanceof ItemDisplay || entity instanceof Interaction) {
                 entity.remove();
             }
+        }
+    }
+
+    private void removeLegacyEntitiesForConfig(ConfigurationSection section) {
+        for (String key : section.getKeys(false)) {
+            ConfigurationSection entry = section.getConfigurationSection(key);
+            if (entry == null) {
+                continue;
+            }
+            String worldName = entry.getString("world");
+            World world = worldName == null ? null : plugin.getServer().getWorld(worldName);
+            if (world == null) {
+                continue;
+            }
+            double x = entry.getDouble("x");
+            double y = entry.getDouble("y");
+            double z = entry.getDouble("z");
+            Location location = new Location(world, x, y, z);
+            removeLegacyEntities(world, location);
         }
     }
 
