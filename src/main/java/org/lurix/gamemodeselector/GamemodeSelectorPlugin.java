@@ -15,6 +15,7 @@ public final class GamemodeSelectorPlugin extends JavaPlugin implements CommandE
 
     @Override
     public void onEnable() {
+        saveDefaultConfig();
         selectorManager = new SelectorManager(this);
         getServer().getMessenger().registerOutgoingPluginChannel(this, "BungeeCord");
         getServer().getPluginManager().registerEvents(selectorManager, this);
