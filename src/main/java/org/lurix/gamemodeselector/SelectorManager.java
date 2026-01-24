@@ -37,6 +37,7 @@ import org.joml.Vector3f;
 public final class SelectorManager implements Listener {
     private static final String SELECTOR_TAG = "gamemodeselector";
     private static final double LEGACY_CLEANUP_RADIUS = 1.5;
+    private static final double VERIFY_RADIUS = 0.6;
     private static final float HOVER_SCALE_MULTIPLIER = 1.5f;
     private static final double MAX_INTERACT_DISTANCE = 10.0;
     private static final float ROTATION_STEP = 0.015f;
@@ -378,6 +379,36 @@ public final class SelectorManager implements Listener {
         saveSelectors();
     }
 
+    public void verifySelectors() {
+        ConfigurationSection section = plugin.getConfig().getConfigurationSection("selectors");
+        if (section == null) {
+            return;
+        }
+        for (String key : section.getKeys(false)) {
+            ConfigurationSection entry = section.getConfigurationSection(key);
+            if (entry == null) {
+                continue;
+            }
+            String worldName = entry.getString("world");
+            World world = worldName == null ? null : plugin.getServer().getWorld(worldName);
+            if (world == null) {
+                continue;
+            }
+            double x = entry.getDouble("x");
+            double y = entry.getDouble("y");
+            double z = entry.getDouble("z");
+            Location location = new Location(world, x, y, z);
+            if (hasSelectorAt(location)) {
+                continue;
+            }
+            String materialName = entry.getString("material", "");
+            String serverName = entry.getString("server", "");
+            float size = (float) entry.getDouble("size", 1.0);
+            float rotation = (float) entry.getDouble("rotation", 0.0);
+            spawnSelectorAt(location, materialName, Float.toString(size), serverName, rotation, null);
+        }
+    }
+
     public void saveSelectors() {
         plugin.getConfig().set("selectors", null);
         ConfigurationSection section = plugin.getConfig().createSection("selectors");
@@ -418,6 +449,19 @@ public final class SelectorManager implements Listener {
                 entity.remove();
             }
         }
+    }
+
+    private boolean hasSelectorAt(Location location) {
+        World world = location.getWorld();
+        if (world == null) {
+            return false;
+        }
+        for (Entity entity : world.getNearbyEntities(location, VERIFY_RADIUS, VERIFY_RADIUS, VERIFY_RADIUS)) {
+            if (entity.getScoreboardTags().contains(SELECTOR_TAG) && entity instanceof ItemDisplay) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void removeLegacyEntitiesForConfig(ConfigurationSection section) {

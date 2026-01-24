@@ -26,6 +26,7 @@ public final class GamemodeSelectorPlugin extends JavaPlugin implements CommandE
         registerCommand("gamemode");
         selectorManager.cleanupSpawnedEntities();
         selectorManager.loadSelectors();
+        getServer().getScheduler().runTaskLater(this, selectorManager::verifySelectors, 20L);
     }
 
     @Override
