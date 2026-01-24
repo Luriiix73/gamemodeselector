@@ -57,7 +57,15 @@ public final class SelectorManager implements Listener {
             @NotNull String sizeInput,
             @NotNull String minimessage
     ) {
-        boolean created = spawnSelectorAt(player.getLocation().clone(), materialName, sizeInput, minimessage, null, player);
+        boolean created = spawnSelectorAt(
+                player.getLocation().clone(),
+                materialName,
+                sizeInput,
+                minimessage,
+                null,
+                0f,
+                player
+        );
         if (created) {
             player.sendMessage(Component.text("Gamemode-Selector erstellt."));
         }
@@ -69,6 +77,7 @@ public final class SelectorManager implements Listener {
             @NotNull String sizeInput,
             @NotNull String minimessage,
             @Nullable String serverName,
+            float rotation,
             @Nullable Player notifier
     ) {
         Material material = Material.matchMaterial(materialName);
@@ -103,7 +112,7 @@ public final class SelectorManager implements Listener {
             display.setItemStack(new ItemStack(material));
             display.setBillboard(Display.Billboard.FIXED);
             display.setGlowing(true);
-            display.setTransformation(createTransformation(size, 0f));
+            display.setTransformation(createTransformation(size, rotation));
             display.addScoreboardTag(SELECTOR_TAG);
         });
 
@@ -127,6 +136,7 @@ public final class SelectorManager implements Listener {
         });
 
         Selector selector = new Selector(itemDisplay, textDisplay, interaction, size, minimessage, material, serverName);
+        selector.setRotation(rotation);
         selectors.put(itemDisplay.getUniqueId(), selector);
         selectors.put(textDisplay.getUniqueId(), selector);
         selectors.put(interaction.getUniqueId(), selector);
@@ -367,8 +377,9 @@ public final class SelectorManager implements Listener {
             String minimessage = entry.getString("minimessage", "");
             String serverName = entry.getString("server", "");
             float size = (float) entry.getDouble("size", 1.0);
+            float rotation = (float) entry.getDouble("rotation", 0.0);
             Location location = new Location(world, x, y, z);
-            spawnSelectorAt(location, materialName, Float.toString(size), minimessage, serverName, null);
+            spawnSelectorAt(location, materialName, Float.toString(size), minimessage, serverName, rotation, null);
         }
     }
 
@@ -392,6 +403,7 @@ public final class SelectorManager implements Listener {
             entry.set("size", selector.baseScale());
             entry.set("minimessage", selector.minimessage());
             entry.set("server", selector.serverName());
+            entry.set("rotation", selector.rotation());
         }
         plugin.saveConfig();
     }
