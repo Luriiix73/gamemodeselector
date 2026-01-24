@@ -38,6 +38,7 @@ import org.joml.Vector3f;
 
 public final class SelectorManager implements Listener {
     private static final String SELECTOR_TAG = "gamemodeselector";
+    private static final double LEGACY_CLEANUP_RADIUS = 0.6;
     private static final float HOVER_SCALE_MULTIPLIER = 1.5f;
     private static final double MAX_INTERACT_DISTANCE = 10.0;
     private static final float ROTATION_STEP = 0.015f;
@@ -46,6 +47,7 @@ public final class SelectorManager implements Listener {
     private final Map<UUID, Selector> selectors = new HashMap<>();
     private final Map<UUID, UUID> hoveredByPlayer = new HashMap<>();
     private final MiniMessage miniMessage = MiniMessage.miniMessage();
+    private boolean loading;
 
     public SelectorManager(Plugin plugin) {
         this.plugin = plugin;
@@ -140,7 +142,9 @@ public final class SelectorManager implements Listener {
         selectors.put(itemDisplay.getUniqueId(), selector);
         selectors.put(textDisplay.getUniqueId(), selector);
         selectors.put(interaction.getUniqueId(), selector);
-        saveSelectors();
+        if (!loading) {
+            saveSelectors();
+        }
         return true;
     }
 
@@ -356,8 +360,12 @@ public final class SelectorManager implements Listener {
     }
 
     public void loadSelectors() {
+        selectors.clear();
+        hoveredByPlayer.clear();
+        loading = true;
         ConfigurationSection section = plugin.getConfig().getConfigurationSection("selectors");
         if (section == null) {
+            loading = false;
             return;
         }
         for (String key : section.getKeys(false)) {
@@ -379,8 +387,11 @@ public final class SelectorManager implements Listener {
             float size = (float) entry.getDouble("size", 1.0);
             float rotation = (float) entry.getDouble("rotation", 0.0);
             Location location = new Location(world, x, y, z);
+            removeLegacyEntities(world, location);
             spawnSelectorAt(location, materialName, Float.toString(size), minimessage, serverName, rotation, null);
         }
+        loading = false;
+        saveSelectors();
     }
 
     public void saveSelectors() {
@@ -414,6 +425,14 @@ public final class SelectorManager implements Listener {
                 if (entity.getScoreboardTags().contains(SELECTOR_TAG)) {
                     entity.remove();
                 }
+            }
+        }
+    }
+
+    private void removeLegacyEntities(World world, Location location) {
+        for (Entity entity : world.getNearbyEntities(location, LEGACY_CLEANUP_RADIUS, LEGACY_CLEANUP_RADIUS, LEGACY_CLEANUP_RADIUS)) {
+            if (entity instanceof ItemDisplay || entity instanceof TextDisplay || entity instanceof Interaction) {
+                entity.remove();
             }
         }
     }
