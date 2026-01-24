@@ -16,7 +16,6 @@ import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Interaction;
@@ -106,14 +105,6 @@ public final class SelectorManager implements Listener {
         if (world == null) {
             return false;
         }
-        ArmorStand anchor = world.spawn(baseLocation, ArmorStand.class, stand -> {
-            stand.setInvisible(true);
-            stand.setMarker(true);
-            stand.setGravity(false);
-            stand.setSilent(true);
-            stand.addScoreboardTag(SELECTOR_TAG);
-        });
-
         ItemDisplay itemDisplay = world.spawn(baseLocation, ItemDisplay.class, display -> {
             display.setItemStack(new ItemStack(material));
             display.setBillboard(Display.Billboard.FIXED);
@@ -130,9 +121,8 @@ public final class SelectorManager implements Listener {
             hitbox.addScoreboardTag(SELECTOR_TAG);
         });
 
-        Selector selector = new Selector(anchor, itemDisplay, interaction, baseLocation.clone(), size, material, serverName);
+        Selector selector = new Selector(itemDisplay, interaction, baseLocation.clone(), size, material, serverName);
         selector.setRotation(rotation);
-        selectors.put(anchor.getUniqueId(), selector);
         selectors.put(itemDisplay.getUniqueId(), selector);
         selectors.put(interaction.getUniqueId(), selector);
         if (!loading) {
@@ -170,9 +160,8 @@ public final class SelectorManager implements Listener {
         Set<Selector> uniqueSelectors = new HashSet<>(selectors.values());
         List<Selector> invalidSelectors = new ArrayList<>();
         for (Selector selector : uniqueSelectors) {
-            ArmorStand anchor = selector.anchor();
             ItemDisplay display = selector.itemDisplay();
-            if (!display.isValid() || !anchor.isValid()) {
+            if (!display.isValid()) {
                 invalidSelectors.add(selector);
                 continue;
             }
@@ -196,7 +185,6 @@ public final class SelectorManager implements Listener {
     public void shutdown() {
         saveSelectors();
         for (Selector selector : selectors.values()) {
-            selector.anchor().remove();
             selector.itemDisplay().remove();
             selector.interaction().remove();
         }
@@ -350,10 +338,8 @@ public final class SelectorManager implements Listener {
     }
 
     private void removeSelector(Selector selector) {
-        selectors.remove(selector.anchor().getUniqueId());
         selectors.remove(selector.itemDisplay().getUniqueId());
         selectors.remove(selector.interaction().getUniqueId());
-        selector.anchor().remove();
         selector.itemDisplay().remove();
         selector.interaction().remove();
     }
@@ -429,7 +415,7 @@ public final class SelectorManager implements Listener {
         Set<Selector> uniqueSelectors = new HashSet<>(selectors.values());
         int index = 0;
         for (Selector selector : uniqueSelectors) {
-            Location location = selector.anchor().getLocation();
+            Location location = selector.location();
             World world = location.getWorld();
             if (world == null) {
                 continue;
@@ -459,7 +445,7 @@ public final class SelectorManager implements Listener {
 
     private void removeLegacyEntities(World world, Location location) {
         for (Entity entity : world.getNearbyEntities(location, LEGACY_CLEANUP_RADIUS, LEGACY_CLEANUP_RADIUS, LEGACY_CLEANUP_RADIUS)) {
-            if (entity instanceof ItemDisplay || entity instanceof Interaction || entity instanceof ArmorStand) {
+            if (entity instanceof ItemDisplay || entity instanceof Interaction) {
                 entity.remove();
             }
         }
@@ -471,7 +457,7 @@ public final class SelectorManager implements Listener {
             return false;
         }
         for (Entity entity : world.getNearbyEntities(location, VERIFY_RADIUS, VERIFY_RADIUS, VERIFY_RADIUS)) {
-            if (entity.getScoreboardTags().contains(SELECTOR_TAG) && entity instanceof ArmorStand) {
+            if (entity.getScoreboardTags().contains(SELECTOR_TAG) && entity instanceof ItemDisplay) {
                 return true;
             }
         }
