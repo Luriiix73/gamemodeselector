@@ -8,6 +8,7 @@ import org.bukkit.entity.ItemDisplay;
 public final class Selector {
     private final ItemDisplay itemDisplay;
     private final Interaction interaction;
+    private final Location baseLocation;
     private final float baseScale;
     private final Material material;
     private String serverName;
@@ -16,12 +17,14 @@ public final class Selector {
     public Selector(
             ItemDisplay itemDisplay,
             Interaction interaction,
+            Location baseLocation,
             float baseScale,
             Material material,
             String serverName
     ) {
         this.itemDisplay = itemDisplay;
         this.interaction = interaction;
+        this.baseLocation = baseLocation;
         this.baseScale = baseScale;
         this.material = material;
         this.serverName = serverName;
@@ -60,6 +63,6 @@ public final class Selector {
     }
 
     public Location location() {
-        return itemDisplay.getLocation().clone();
+        return baseLocation.clone();
     }
 }

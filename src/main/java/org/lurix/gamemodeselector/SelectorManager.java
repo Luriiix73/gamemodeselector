@@ -120,7 +120,7 @@ public final class SelectorManager implements Listener {
             hitbox.addScoreboardTag(SELECTOR_TAG);
         });
 
-        Selector selector = new Selector(itemDisplay, interaction, size, material, serverName);
+        Selector selector = new Selector(itemDisplay, interaction, baseLocation.clone(), size, material, serverName);
         selector.setRotation(rotation);
         selectors.put(itemDisplay.getUniqueId(), selector);
         selectors.put(interaction.getUniqueId(), selector);
