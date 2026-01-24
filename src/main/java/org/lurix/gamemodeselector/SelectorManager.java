@@ -11,7 +11,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -22,7 +21,6 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Interaction;
 import org.bukkit.entity.ItemDisplay;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.TextDisplay;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractAtEntityEvent;
@@ -46,7 +44,6 @@ public final class SelectorManager implements Listener {
     private final Plugin plugin;
     private final Map<UUID, Selector> selectors = new HashMap<>();
     private final Map<UUID, UUID> hoveredByPlayer = new HashMap<>();
-    private final MiniMessage miniMessage = MiniMessage.miniMessage();
     private boolean loading;
 
     public SelectorManager(Plugin plugin) {
@@ -56,14 +53,12 @@ public final class SelectorManager implements Listener {
     public void spawnSelector(
             @NotNull Player player,
             @NotNull String materialName,
-            @NotNull String sizeInput,
-            @NotNull String minimessage
+            @NotNull String sizeInput
     ) {
         boolean created = spawnSelectorAt(
                 player.getLocation().clone(),
                 materialName,
                 sizeInput,
-                minimessage,
                 null,
                 0f,
                 player
@@ -77,7 +72,6 @@ public final class SelectorManager implements Listener {
             @NotNull Location location,
             @NotNull String materialName,
             @NotNull String sizeInput,
-            @NotNull String minimessage,
             @Nullable String serverName,
             float rotation,
             @Nullable Player notifier
@@ -126,21 +120,9 @@ public final class SelectorManager implements Listener {
             hitbox.addScoreboardTag(SELECTOR_TAG);
         });
 
-        float textScale = Math.max(1.5f, size * 1.8f);
-        double textYOffset = size * 0.7 + 0.8;
-        Location textLocation = baseLocation.clone().add(0, textYOffset, 0);
-        TextDisplay textDisplay = world.spawn(textLocation, TextDisplay.class, display -> {
-            display.text(miniMessage.deserialize(minimessage));
-            display.setBillboard(Display.Billboard.CENTER);
-            display.setTransformation(createTextTransformation(textScale));
-            display.setSeeThrough(true);
-            display.addScoreboardTag(SELECTOR_TAG);
-        });
-
-        Selector selector = new Selector(itemDisplay, textDisplay, interaction, size, minimessage, material, serverName);
+        Selector selector = new Selector(itemDisplay, interaction, size, material, serverName);
         selector.setRotation(rotation);
         selectors.put(itemDisplay.getUniqueId(), selector);
-        selectors.put(textDisplay.getUniqueId(), selector);
         selectors.put(interaction.getUniqueId(), selector);
         if (!loading) {
             saveSelectors();
@@ -189,7 +171,6 @@ public final class SelectorManager implements Listener {
         saveSelectors();
         for (Selector selector : selectors.values()) {
             selector.itemDisplay().remove();
-            selector.textDisplay().remove();
             selector.interaction().remove();
         }
         selectors.clear();
@@ -321,15 +302,6 @@ public final class SelectorManager implements Listener {
         );
     }
 
-    private Transformation createTextTransformation(float scale) {
-        return new Transformation(
-                new Vector3f(0f, 0f, 0f),
-                new Quaternionf(),
-                new Vector3f(scale, scale, scale),
-                new Quaternionf()
-        );
-    }
-
     @Nullable
     private Selector findNearestSelector(Player player) {
         Location origin = player.getEyeLocation();
@@ -352,10 +324,8 @@ public final class SelectorManager implements Listener {
 
     private void removeSelector(Selector selector) {
         selectors.remove(selector.itemDisplay().getUniqueId());
-        selectors.remove(selector.textDisplay().getUniqueId());
         selectors.remove(selector.interaction().getUniqueId());
         selector.itemDisplay().remove();
-        selector.textDisplay().remove();
         selector.interaction().remove();
     }
 
@@ -382,13 +352,12 @@ public final class SelectorManager implements Listener {
             double y = entry.getDouble("y");
             double z = entry.getDouble("z");
             String materialName = entry.getString("material", "");
-            String minimessage = entry.getString("minimessage", "");
             String serverName = entry.getString("server", "");
             float size = (float) entry.getDouble("size", 1.0);
             float rotation = (float) entry.getDouble("rotation", 0.0);
             Location location = new Location(world, x, y, z);
             removeLegacyEntities(world, location);
-            spawnSelectorAt(location, materialName, Float.toString(size), minimessage, serverName, rotation, null);
+            spawnSelectorAt(location, materialName, Float.toString(size), serverName, rotation, null);
         }
         loading = false;
         saveSelectors();
@@ -412,7 +381,6 @@ public final class SelectorManager implements Listener {
             entry.set("z", location.getZ());
             entry.set("material", selector.material().name());
             entry.set("size", selector.baseScale());
-            entry.set("minimessage", selector.minimessage());
             entry.set("server", selector.serverName());
             entry.set("rotation", selector.rotation());
         }
@@ -431,7 +399,7 @@ public final class SelectorManager implements Listener {
 
     private void removeLegacyEntities(World world, Location location) {
         for (Entity entity : world.getNearbyEntities(location, LEGACY_CLEANUP_RADIUS, LEGACY_CLEANUP_RADIUS, LEGACY_CLEANUP_RADIUS)) {
-            if (entity instanceof ItemDisplay || entity instanceof TextDisplay || entity instanceof Interaction) {
+            if (entity instanceof ItemDisplay || entity instanceof Interaction) {
                 entity.remove();
             }
         }

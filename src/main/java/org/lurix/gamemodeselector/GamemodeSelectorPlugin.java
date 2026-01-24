@@ -1,6 +1,5 @@
 package org.lurix.gamemodeselector;
 
-import java.util.List;
 import net.kyori.adventure.text.Component;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -49,7 +48,7 @@ public final class GamemodeSelectorPlugin extends JavaPlugin implements CommandE
             return true;
         }
         if (args.length == 0) {
-            sender.sendMessage(Component.text("Usage: /selector set <material> <size> <minimessage>"));
+            sender.sendMessage(Component.text("Usage: /selector set <material> <size>"));
             sender.sendMessage(Component.text("Usage: /selector add (<server>)"));
             sender.sendMessage(Component.text("Usage: /selector remove"));
             sender.sendMessage(Component.text("Usage: /selector clear"));
@@ -77,17 +76,16 @@ public final class GamemodeSelectorPlugin extends JavaPlugin implements CommandE
             return true;
         }
         if ("set".equalsIgnoreCase(args[0])) {
-            if (args.length < 4) {
-                sender.sendMessage(Component.text("Usage: /selector set <material> <size> <minimessage>"));
+            if (args.length < 3) {
+                sender.sendMessage(Component.text("Usage: /selector set <material> <size>"));
                 return true;
             }
             String materialName = args[1];
             String sizeInput = args[2];
-            String minimessage = String.join(" ", List.of(args).subList(3, args.length));
-            selectorManager.spawnSelector(player, materialName, sizeInput, minimessage);
+            selectorManager.spawnSelector(player, materialName, sizeInput);
             return true;
         }
-        sender.sendMessage(Component.text("Usage: /selector set <material> <size> <minimessage>"));
+        sender.sendMessage(Component.text("Usage: /selector set <material> <size>"));
         sender.sendMessage(Component.text("Usage: /selector add (<server>)"));
         sender.sendMessage(Component.text("Usage: /selector remove"));
         sender.sendMessage(Component.text("Usage: /selector clear"));
