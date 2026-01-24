@@ -202,7 +202,7 @@ public final class SelectorManager implements Listener {
             return materials;
         }
         if (args.length == 1) {
-            return List.of("set", "add", "remove", "clear");
+            return List.of("set", "add", "remove", "save", "clear");
         }
         return List.of();
     }

@@ -54,6 +54,7 @@ public final class GamemodeSelectorPlugin extends JavaPlugin implements CommandE
             sender.sendMessage(Component.text("Usage: /selector set <material> <size>"));
             sender.sendMessage(Component.text("Usage: /selector add (<server>)"));
             sender.sendMessage(Component.text("Usage: /selector remove"));
+            sender.sendMessage(Component.text("Usage: /selector save"));
             sender.sendMessage(Component.text("Usage: /selector clear"));
             return true;
         }
@@ -64,6 +65,11 @@ public final class GamemodeSelectorPlugin extends JavaPlugin implements CommandE
         if ("clear".equalsIgnoreCase(args[0])) {
             selectorManager.clearAllSelectors();
             sender.sendMessage(Component.text("Alle Gamemode-Selectoren entfernt."));
+            return true;
+        }
+        if ("save".equalsIgnoreCase(args[0])) {
+            selectorManager.saveSelectors();
+            sender.sendMessage(Component.text("Gamemode-Selectoren gespeichert."));
             return true;
         }
         if ("add".equalsIgnoreCase(args[0])) {
@@ -91,6 +97,7 @@ public final class GamemodeSelectorPlugin extends JavaPlugin implements CommandE
         sender.sendMessage(Component.text("Usage: /selector set <material> <size>"));
         sender.sendMessage(Component.text("Usage: /selector add (<server>)"));
         sender.sendMessage(Component.text("Usage: /selector remove"));
+        sender.sendMessage(Component.text("Usage: /selector save"));
         sender.sendMessage(Component.text("Usage: /selector clear"));
         return true;
     }
