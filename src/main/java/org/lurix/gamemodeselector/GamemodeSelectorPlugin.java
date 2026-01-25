@@ -12,27 +12,34 @@ import org.jetbrains.annotations.NotNull;
 
 public final class GamemodeSelectorPlugin extends JavaPlugin implements CommandExecutor, TabCompleter {
     private SelectorManager selectorManager;
+    private JoinEntityManager joinEntityManager;
 
     @Override
     public void onEnable() {
         saveDefaultConfig();
         reloadConfig();
         selectorManager = new SelectorManager(this);
+        joinEntityManager = new JoinEntityManager(this);
         getServer().getMessenger().registerOutgoingPluginChannel(this, "BungeeCord");
         getServer().getPluginManager().registerEvents(selectorManager, this);
         getServer().getPluginManager().registerEvents(new HoverListener(selectorManager), this);
+        getServer().getPluginManager().registerEvents(new JoinEntityListener(joinEntityManager), this);
         getServer().getScheduler().runTaskTimer(this, selectorManager::tickRotation, 1L, 1L);
         registerCommand("selector");
         registerCommand("gamemode");
         selectorManager.cleanupSpawnedEntities();
         selectorManager.loadSelectors();
         getServer().getScheduler().runTaskLater(this, selectorManager::verifySelectors, 20L);
+        joinEntityManager.loadEntities();
     }
 
     @Override
     public void onDisable() {
         if (selectorManager != null) {
             selectorManager.shutdown();
+        }
+        if (joinEntityManager != null) {
+            joinEntityManager.saveEntities();
         }
     }
 
