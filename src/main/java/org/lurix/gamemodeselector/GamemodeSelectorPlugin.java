@@ -53,7 +53,6 @@ public final class GamemodeSelectorPlugin extends JavaPlugin implements CommandE
         }
         if (args.length == 0) {
             sender.sendMessage(Component.text("Usage: /selector set <material> <size>"));
-            sender.sendMessage(Component.text("Usage: /selector armorstand set"));
             sender.sendMessage(Component.text("Usage: /selector add (<server>)"));
             sender.sendMessage(Component.text("Usage: /selector remove"));
             sender.sendMessage(Component.text("Usage: /selector save"));
@@ -67,14 +66,6 @@ public final class GamemodeSelectorPlugin extends JavaPlugin implements CommandE
         if ("clear".equalsIgnoreCase(args[0])) {
             selectorManager.clearAllSelectors();
             sender.sendMessage(Component.text("Alle Gamemode-Selectoren entfernt."));
-            return true;
-        }
-        if ("armorstand".equalsIgnoreCase(args[0])) {
-            if (args.length >= 2 && "set".equalsIgnoreCase(args[1])) {
-                selectorManager.spawnAnchor(player);
-                return true;
-            }
-            sender.sendMessage(Component.text("Usage: /selector armorstand set"));
             return true;
         }
         if ("save".equalsIgnoreCase(args[0])) {
@@ -105,7 +96,6 @@ public final class GamemodeSelectorPlugin extends JavaPlugin implements CommandE
             return true;
         }
         sender.sendMessage(Component.text("Usage: /selector set <material> <size>"));
-        sender.sendMessage(Component.text("Usage: /selector armorstand set"));
         sender.sendMessage(Component.text("Usage: /selector add (<server>)"));
         sender.sendMessage(Component.text("Usage: /selector remove"));
         sender.sendMessage(Component.text("Usage: /selector save"));

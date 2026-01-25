@@ -5,11 +5,11 @@ api-version: "1.21"
 commands:
   selector:
     description: Spawn gamemode selector displays.
-    usage: /selector armorstand set | /selector set <material> <size> | /selector add (<server>) | /selector remove | /selector save | /selector clear
+    usage: /selector set <material> <size> | /selector add (<server>) | /selector remove | /selector save | /selector clear
     permission: gamemodeselector.set
   gamemode:
     description: Alias for selector command.
-    usage: /gamemode armorstand set | /gamemode set <material> <size> | /gamemode add (<server>) | /gamemode remove | /gamemode save | /gamemode clear
+    usage: /gamemode set <material> <size> | /gamemode add (<server>) | /gamemode remove | /gamemode save | /gamemode clear
     permission: gamemodeselector.set
 permissions:
   gamemodeselector.set:
