@@ -371,6 +371,25 @@ public final class SelectorManager implements Listener {
             String serverName = entry.getString("server", "");
             float size = (float) entry.getDouble("size", 1.0);
             float rotation = (float) entry.getDouble("rotation", 0.0);
+            String setCommand = entry.getString("setCommand");
+            String addCommand = entry.getString("addCommand");
+            if (setCommand != null) {
+                String[] parts = setCommand.trim().split("\\s+");
+                if (parts.length >= 4) {
+                    materialName = parts[parts.length - 2];
+                    try {
+                        size = Float.parseFloat(parts[parts.length - 1]);
+                    } catch (NumberFormatException ignored) {
+                        size = (float) entry.getDouble("size", 1.0);
+                    }
+                }
+            }
+            if (addCommand != null) {
+                String[] parts = addCommand.trim().split("\\s+");
+                if (parts.length >= 3) {
+                    serverName = parts[parts.length - 1];
+                }
+            }
             Location location = new Location(world, x, y, z);
             removeLegacyEntities(world, location);
             spawnSelectorAt(location, materialName, Float.toString(size), serverName, rotation, null);
@@ -405,6 +424,25 @@ public final class SelectorManager implements Listener {
             String serverName = entry.getString("server", "");
             float size = (float) entry.getDouble("size", 1.0);
             float rotation = (float) entry.getDouble("rotation", 0.0);
+            String setCommand = entry.getString("setCommand");
+            String addCommand = entry.getString("addCommand");
+            if (setCommand != null) {
+                String[] parts = setCommand.trim().split("\\s+");
+                if (parts.length >= 4) {
+                    materialName = parts[parts.length - 2];
+                    try {
+                        size = Float.parseFloat(parts[parts.length - 1]);
+                    } catch (NumberFormatException ignored) {
+                        size = (float) entry.getDouble("size", 1.0);
+                    }
+                }
+            }
+            if (addCommand != null) {
+                String[] parts = addCommand.trim().split("\\s+");
+                if (parts.length >= 3) {
+                    serverName = parts[parts.length - 1];
+                }
+            }
             spawnSelectorAt(location, materialName, Float.toString(size), serverName, rotation, null);
         }
     }
@@ -429,6 +467,10 @@ public final class SelectorManager implements Listener {
             entry.set("size", selector.baseScale());
             entry.set("server", selector.serverName());
             entry.set("rotation", selector.rotation());
+            entry.set("setCommand", "selector set " + selector.material().name().toLowerCase() + " " + selector.baseScale());
+            if (selector.serverName() != null && !selector.serverName().isBlank()) {
+                entry.set("addCommand", "selector add " + selector.serverName());
+            }
         }
         plugin.saveConfig();
     }
