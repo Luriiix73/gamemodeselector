@@ -45,6 +45,7 @@ public final class SelectorManager implements Listener {
 
     private final Plugin plugin;
     private final Map<UUID, Selector> selectors = new HashMap<>();
+    private final Map<UUID, ArmorStand> anchors = new HashMap<>();
     private final Map<UUID, UUID> hoveredByPlayer = new HashMap<>();
     private boolean loading;
 
@@ -57,8 +58,13 @@ public final class SelectorManager implements Listener {
             @NotNull String materialName,
             @NotNull String sizeInput
     ) {
-        boolean created = spawnSelectorAt(
-                player.getLocation().clone(),
+        ArmorStand anchor = findNearestAnchor(player);
+        if (anchor == null) {
+            player.sendMessage(Component.text("Kein ArmorStand in der Nähe gefunden. Nutze /selector armorstand set."));
+            return;
+        }
+        boolean created = spawnSelectorAtAnchor(
+                anchor,
                 materialName,
                 sizeInput,
                 null,
@@ -70,8 +76,8 @@ public final class SelectorManager implements Listener {
         }
     }
 
-    public boolean spawnSelectorAt(
-            @NotNull Location location,
+    public boolean spawnSelectorAtAnchor(
+            @NotNull ArmorStand anchor,
             @NotNull String materialName,
             @NotNull String sizeInput,
             @Nullable String serverName,
@@ -101,18 +107,15 @@ public final class SelectorManager implements Listener {
             return false;
         }
 
-        Location baseLocation = location.clone();
+        Location baseLocation = anchor.getLocation().clone();
         World world = baseLocation.getWorld();
         if (world == null) {
             return false;
         }
-        ArmorStand anchor = world.spawn(baseLocation, ArmorStand.class, stand -> {
-            stand.setInvisible(true);
-            stand.setMarker(true);
-            stand.setGravity(false);
-            stand.setSilent(true);
-            stand.addScoreboardTag(SELECTOR_TAG);
-        });
+        anchor.setInvisible(true);
+        anchor.setGravity(false);
+        anchor.setSilent(true);
+        anchor.addScoreboardTag(SELECTOR_TAG);
 
         ItemDisplay itemDisplay = world.spawn(baseLocation, ItemDisplay.class, display -> {
             display.setItemStack(new ItemStack(material));
@@ -139,6 +142,30 @@ public final class SelectorManager implements Listener {
             saveSelectors();
         }
         return true;
+    }
+
+    public void spawnAnchor(@NotNull Player player) {
+        Location location = player.getLocation().clone();
+        ArmorStand anchor = spawnAnchorAt(location, true);
+        anchors.put(anchor.getUniqueId(), anchor);
+        saveSelectors();
+        player.sendMessage(Component.text("ArmorStand gesetzt."));
+    }
+
+    private ArmorStand spawnAnchorAt(@NotNull Location location, boolean visible) {
+        World world = location.getWorld();
+        if (world == null) {
+            throw new IllegalStateException("World is null");
+        }
+        ArmorStand anchor = world.spawn(location, ArmorStand.class, stand -> {
+            stand.setInvisible(!visible);
+            stand.setMarker(false);
+            stand.setGravity(false);
+            stand.setSilent(true);
+            stand.addScoreboardTag(SELECTOR_TAG);
+        });
+        anchors.put(anchor.getUniqueId(), anchor);
+        return anchor;
     }
 
     @EventHandler
@@ -201,6 +228,10 @@ public final class SelectorManager implements Listener {
             selector.interaction().remove();
         }
         selectors.clear();
+        for (ArmorStand anchor : anchors.values()) {
+            anchor.remove();
+        }
+        anchors.clear();
         hoveredByPlayer.clear();
     }
 
@@ -215,7 +246,10 @@ public final class SelectorManager implements Listener {
             return materials;
         }
         if (args.length == 1) {
-            return List.of("set", "add", "remove", "save", "clear");
+            return List.of("set", "armorstand", "add", "remove", "save", "clear");
+        }
+        if (args.length == 2 && "armorstand".equalsIgnoreCase(args[0])) {
+            return List.of("set");
         }
         return List.of();
     }
@@ -354,6 +388,7 @@ public final class SelectorManager implements Listener {
         selectors.remove(selector.itemDisplay().getUniqueId());
         selectors.remove(selector.interaction().getUniqueId());
         selector.anchor().remove();
+        anchors.remove(selector.anchor().getUniqueId());
         selector.itemDisplay().remove();
         selector.interaction().remove();
     }
@@ -362,6 +397,7 @@ public final class SelectorManager implements Listener {
         selectors.clear();
         hoveredByPlayer.clear();
         loading = true;
+        loadAnchors();
         ConfigurationSection section = plugin.getConfig().getConfigurationSection("selectors");
         if (section == null) {
             loading = false;
@@ -387,7 +423,11 @@ public final class SelectorManager implements Listener {
             float rotation = (float) entry.getDouble("rotation", 0.0);
             Location location = new Location(world, x, y, z);
             removeLegacyEntities(world, location);
-            spawnSelectorAt(location, materialName, Float.toString(size), serverName, rotation, null);
+            ArmorStand anchor = findAnchorAt(location);
+            if (anchor == null) {
+                anchor = spawnAnchorAt(location, false);
+            }
+            spawnSelectorAtAnchor(anchor, materialName, Float.toString(size), serverName, rotation, null);
         }
         loading = false;
         saveSelectors();
@@ -419,11 +459,30 @@ public final class SelectorManager implements Listener {
             String serverName = entry.getString("server", "");
             float size = (float) entry.getDouble("size", 1.0);
             float rotation = (float) entry.getDouble("rotation", 0.0);
-            spawnSelectorAt(location, materialName, Float.toString(size), serverName, rotation, null);
+            ArmorStand anchor = findAnchorAt(location);
+            if (anchor == null) {
+                anchor = spawnAnchorAt(location, false);
+            }
+            spawnSelectorAtAnchor(anchor, materialName, Float.toString(size), serverName, rotation, null);
         }
     }
 
     public void saveSelectors() {
+        plugin.getConfig().set("anchors", null);
+        ConfigurationSection anchorSection = plugin.getConfig().createSection("anchors");
+        int anchorIndex = 0;
+        for (ArmorStand anchor : anchors.values()) {
+            Location location = anchor.getLocation();
+            World world = location.getWorld();
+            if (world == null) {
+                continue;
+            }
+            ConfigurationSection entry = anchorSection.createSection(Integer.toString(anchorIndex++));
+            entry.set("world", world.getName());
+            entry.set("x", location.getX());
+            entry.set("y", location.getY());
+            entry.set("z", location.getZ());
+        }
         plugin.getConfig().set("selectors", null);
         ConfigurationSection section = plugin.getConfig().createSection("selectors");
         Set<Selector> uniqueSelectors = new HashSet<>(selectors.values());
@@ -459,7 +518,7 @@ public final class SelectorManager implements Listener {
 
     private void removeLegacyEntities(World world, Location location) {
         for (Entity entity : world.getNearbyEntities(location, LEGACY_CLEANUP_RADIUS, LEGACY_CLEANUP_RADIUS, LEGACY_CLEANUP_RADIUS)) {
-            if (entity instanceof ItemDisplay || entity instanceof Interaction || entity instanceof ArmorStand) {
+            if (entity instanceof ItemDisplay || entity instanceof Interaction) {
                 entity.remove();
             }
         }
@@ -471,7 +530,7 @@ public final class SelectorManager implements Listener {
             return false;
         }
         for (Entity entity : world.getNearbyEntities(location, VERIFY_RADIUS, VERIFY_RADIUS, VERIFY_RADIUS)) {
-            if (entity.getScoreboardTags().contains(SELECTOR_TAG) && entity instanceof ArmorStand) {
+            if (entity.getScoreboardTags().contains(SELECTOR_TAG) && entity instanceof ItemDisplay) {
                 return true;
             }
         }
@@ -518,8 +577,73 @@ public final class SelectorManager implements Listener {
     public void clearAllSelectors() {
         cleanupSpawnedEntities();
         selectors.clear();
+        anchors.clear();
         hoveredByPlayer.clear();
+        plugin.getConfig().set("anchors", null);
         plugin.getConfig().set("selectors", null);
         plugin.saveConfig();
+    }
+
+    private void loadAnchors() {
+        anchors.clear();
+        ConfigurationSection section = plugin.getConfig().getConfigurationSection("anchors");
+        if (section == null) {
+            return;
+        }
+        for (String key : section.getKeys(false)) {
+            ConfigurationSection entry = section.getConfigurationSection(key);
+            if (entry == null) {
+                continue;
+            }
+            String worldName = entry.getString("world");
+            World world = worldName == null ? null : plugin.getServer().getWorld(worldName);
+            if (world == null) {
+                continue;
+            }
+            double x = entry.getDouble("x");
+            double y = entry.getDouble("y");
+            double z = entry.getDouble("z");
+            Location location = new Location(world, x, y, z);
+            spawnAnchorAt(location, true);
+        }
+    }
+
+    @Nullable
+    private ArmorStand findAnchorAt(Location location) {
+        World world = location.getWorld();
+        if (world == null) {
+            return null;
+        }
+        ArmorStand nearest = null;
+        double nearestDistance = VERIFY_RADIUS * VERIFY_RADIUS;
+        for (ArmorStand anchor : anchors.values()) {
+            if (!anchor.isValid()) {
+                continue;
+            }
+            double distance = anchor.getLocation().distanceSquared(location);
+            if (distance <= nearestDistance) {
+                nearestDistance = distance;
+                nearest = anchor;
+            }
+        }
+        return nearest;
+    }
+
+    @Nullable
+    private ArmorStand findNearestAnchor(Player player) {
+        Location origin = player.getEyeLocation();
+        ArmorStand nearest = null;
+        double nearestDistance = MAX_INTERACT_DISTANCE * MAX_INTERACT_DISTANCE;
+        for (ArmorStand anchor : anchors.values()) {
+            if (!anchor.isValid()) {
+                continue;
+            }
+            double distance = anchor.getLocation().distanceSquared(origin);
+            if (distance <= nearestDistance) {
+                nearestDistance = distance;
+                nearest = anchor;
+            }
+        }
+        return nearest;
     }
 }
