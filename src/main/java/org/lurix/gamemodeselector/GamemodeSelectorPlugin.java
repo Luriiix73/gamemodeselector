@@ -23,7 +23,7 @@ public final class GamemodeSelectorPlugin extends JavaPlugin implements CommandE
         getServer().getMessenger().registerOutgoingPluginChannel(this, "BungeeCord");
         getServer().getPluginManager().registerEvents(selectorManager, this);
         getServer().getPluginManager().registerEvents(new HoverListener(selectorManager), this);
-        getServer().getPluginManager().registerEvents(new JoinEntityListener(joinEntityManager), this);
+        getServer().getPluginManager().registerEvents(joinEntityManager, this);
         getServer().getScheduler().runTaskTimer(this, selectorManager::tickRotation, 1L, 1L);
         registerCommand("selector");
         registerCommand("gamemode");
